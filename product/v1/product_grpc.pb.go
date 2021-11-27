@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductServiceClient interface {
-	FetchResponse(ctx context.Context, in *FetchResponseRequest, opts ...grpc.CallOption) (ProductService_FetchResponseClient, error)
+	GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error)
 }
 
 type productServiceClient struct {
@@ -29,51 +29,28 @@ func NewProductServiceClient(cc grpc.ClientConnInterface) ProductServiceClient {
 	return &productServiceClient{cc}
 }
 
-func (c *productServiceClient) FetchResponse(ctx context.Context, in *FetchResponseRequest, opts ...grpc.CallOption) (ProductService_FetchResponseClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ProductService_ServiceDesc.Streams[0], "/trple.product.v1.ProductService/FetchResponse", opts...)
+func (c *productServiceClient) GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error) {
+	out := new(GetProductByIdResponse)
+	err := c.cc.Invoke(ctx, "/trple.product.v1.ProductService/GetProductById", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &productServiceFetchResponseClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type ProductService_FetchResponseClient interface {
-	Recv() (*FetchResponseResponse, error)
-	grpc.ClientStream
-}
-
-type productServiceFetchResponseClient struct {
-	grpc.ClientStream
-}
-
-func (x *productServiceFetchResponseClient) Recv() (*FetchResponseResponse, error) {
-	m := new(FetchResponseResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // ProductServiceServer is the server API for ProductService service.
 // All implementations should embed UnimplementedProductServiceServer
 // for forward compatibility
 type ProductServiceServer interface {
-	FetchResponse(*FetchResponseRequest, ProductService_FetchResponseServer) error
+	GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error)
 }
 
 // UnimplementedProductServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedProductServiceServer struct {
 }
 
-func (UnimplementedProductServiceServer) FetchResponse(*FetchResponseRequest, ProductService_FetchResponseServer) error {
-	return status.Errorf(codes.Unimplemented, "method FetchResponse not implemented")
+func (UnimplementedProductServiceServer) GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductById not implemented")
 }
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -87,25 +64,22 @@ func RegisterProductServiceServer(s grpc.ServiceRegistrar, srv ProductServiceSer
 	s.RegisterService(&ProductService_ServiceDesc, srv)
 }
 
-func _ProductService_FetchResponse_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(FetchResponseRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _ProductService_GetProductById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(ProductServiceServer).FetchResponse(m, &productServiceFetchResponseServer{stream})
-}
-
-type ProductService_FetchResponseServer interface {
-	Send(*FetchResponseResponse) error
-	grpc.ServerStream
-}
-
-type productServiceFetchResponseServer struct {
-	grpc.ServerStream
-}
-
-func (x *productServiceFetchResponseServer) Send(m *FetchResponseResponse) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetProductById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/trple.product.v1.ProductService/GetProductById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetProductById(ctx, req.(*GetProductByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
@@ -114,13 +88,12 @@ func (x *productServiceFetchResponseServer) Send(m *FetchResponseResponse) error
 var ProductService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "trple.product.v1.ProductService",
 	HandlerType: (*ProductServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "FetchResponse",
-			Handler:       _ProductService_FetchResponse_Handler,
-			ServerStreams: true,
+			MethodName: "GetProductById",
+			Handler:    _ProductService_GetProductById_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "product/v1/product.proto",
 }
