@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ProductServiceClient interface {
 	GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error)
 	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error)
+	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error)
 }
 
 type productServiceClient struct {
@@ -48,12 +49,22 @@ func (c *productServiceClient) UpdateProduct(ctx context.Context, in *UpdateProd
 	return out, nil
 }
 
+func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error) {
+	out := new(CreateProductResponse)
+	err := c.cc.Invoke(ctx, "/trple.product.v1.ProductService/CreateProduct", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations should embed UnimplementedProductServiceServer
 // for forward compatibility
 type ProductServiceServer interface {
 	GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error)
 	UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error)
+	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
 }
 
 // UnimplementedProductServiceServer should be embedded to have forward compatible implementations.
@@ -65,6 +76,9 @@ func (UnimplementedProductServiceServer) GetProductById(context.Context, *GetPro
 }
 func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
+}
+func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
 }
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -114,6 +128,24 @@ func _ProductService_UpdateProduct_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).CreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/trple.product.v1.ProductService/CreateProduct",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).CreateProduct(ctx, req.(*CreateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -129,7 +161,11 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateProduct",
 			Handler:    _ProductService_UpdateProduct_Handler,
 		},
+		{
+			MethodName: "CreateProduct",
+			Handler:    _ProductService_CreateProduct_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "product/v1/product.proto",
+	Metadata: "trple/product/v1/product.proto",
 }
